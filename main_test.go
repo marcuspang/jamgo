@@ -62,8 +62,8 @@ func (vk ValidatorKey) UnmarshalJSON(data []byte) error {
 
 	vk.Ed25519Key = hexToBytes32(tmp.Ed25519)
 	vk.BandersnatchKey = hexToBytes32(tmp.Bandersnatch)
-	vk.BLSKey = hexToBytes(tmp.Bls)
-	vk.Metadata = hexToBytes(tmp.Metadata)
+	vk.BLSKey = hexToBytes144(tmp.Bls)
+	vk.Metadata = hexToBytes128(tmp.Metadata)
 
 	return nil
 }
@@ -145,7 +145,7 @@ func TestSafroleTransitions(t *testing.T) {
 			}
 
 			// Compare the post-state with the expected post-state
-			if ok, err := compareStates(*output.State, testCase.PostState); !ok {
+			if ok, err := compareSafroleStates(*output.State, testCase.PostState); !ok {
 				t.Errorf("Post-state mismatch in file %s: %v", file, err)
 			}
 		})
@@ -161,7 +161,7 @@ func compareOutputs(actual SafroleOutput, expected struct {
 		actual.Ok.TicketsMark == expected.TicketsMark
 }
 
-func compareStates(actual, expected SafroleState) (bool, error) {
+func compareSafroleStates(actual, expected SafroleState) (bool, error) {
 	if actual.Timeslot != expected.Timeslot {
 		return false, errors.New("Timeslot mismatch")
 	}
@@ -196,12 +196,26 @@ func hexToBytes(s string) []byte {
 	if len(s) < 2 {
 		return []byte{}
 	}
-	b, _ := hex.DecodeString(s[2:]) // Remove "0x" prefix
+	b, _ := hex.DecodeString(s[2:])
 	return b
 }
 
 func hexToBytes32(s string) [32]byte {
 	var arr [32]byte
+	b := hexToBytes(s)
+	copy(arr[:], b)
+	return arr
+}
+
+func hexToBytes144(s string) [144]byte {
+	var arr [144]byte
+	b := hexToBytes(s)
+	copy(arr[:], b)
+	return arr
+}
+
+func hexToBytes128(s string) [128]byte {
+	var arr [128]byte
 	b := hexToBytes(s)
 	copy(arr[:], b)
 	return arr
