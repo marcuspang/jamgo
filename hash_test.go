@@ -50,7 +50,7 @@ func TestSerializeDeserializeAlpha(t *testing.T) {
 			serialized := SerializeAlpha(tc.alpha)
 			deserialized, offset, err := DeserializeAlpha(serialized, 0)
 
-			assert.ErrorIs(t, err, nil)
+			assert.NoError(t, err)
 			assert.Equal(t, offset, len(serialized))
 			assert.Equal(t, tc.alpha, deserialized)
 		})
@@ -121,7 +121,7 @@ func TestSerializeDeserializeBeta(t *testing.T) {
 			serialized := SerializeBeta(tc.beta)
 			deserialized, offset, err := DeserializeBeta(serialized, 0)
 
-			assert.ErrorIs(t, err, nil)
+			assert.NoError(t, err)
 			assert.Equal(t, offset, len(serialized))
 			assert.Equal(t, tc.beta, deserialized)
 		})
@@ -184,7 +184,7 @@ func TestSerializeDeserializeGamma(t *testing.T) {
 			serialized := SerializeGamma(tc.gamma)
 			deserialized, offset, err := DeserializeGamma(serialized, 0)
 
-			assert.ErrorIs(t, err, nil)
+			assert.NoError(t, err)
 			assert.Equal(t, offset, len(serialized))
 			assert.Equal(t, tc.gamma, deserialized)
 		})
@@ -253,7 +253,7 @@ func TestSerializeDeserializeDelta(t *testing.T) {
 			serialized := SerializeDelta(tc.delta)
 			deserialized, _, err := DeserializeDelta(serialized, 0)
 
-			assert.ErrorIs(t, err, nil)
+			assert.NoError(t, err)
 			assert.Equal(t, deserialized, tc.delta)
 		})
 	}
@@ -284,7 +284,7 @@ func TestSerializeDeserializeEta(t *testing.T) {
 			serialized := SerializeEta(tc.eta)
 			deserialized, _, err := DeserializeEta(serialized, 0)
 
-			assert.ErrorIs(t, err, nil)
+			assert.NoError(t, err)
 			assert.Equal(t, deserialized, tc.eta)
 		})
 	}
@@ -341,7 +341,7 @@ func TestSerializeDeserializeRho(t *testing.T) {
 			serialized := SerializeRho(tc.rho)
 			deserialized, _, err := DeserializeRho(serialized, 0)
 
-			assert.ErrorIs(t, err, nil)
+			assert.NoError(t, err)
 			assert.Equal(t, deserialized, tc.rho)
 		})
 	}
@@ -409,7 +409,7 @@ func TestSerializeDeserializePhi(t *testing.T) {
 			serialized := SerializePhi(tc.phi)
 			deserialized, _, err := DeserializePhi(serialized, 0)
 
-			assert.ErrorIs(t, err, nil)
+			assert.NoError(t, err)
 			assert.Equal(t, deserialized, tc.phi)
 		})
 	}
@@ -447,7 +447,7 @@ func TestSerializeDeserializeChi(t *testing.T) {
 			serialized := SerializeChi(tc.chi)
 			deserialized, _, err := DeserializeChi(serialized, 0)
 
-			assert.ErrorIs(t, err, nil)
+			assert.NoError(t, err)
 			assert.Equal(t, deserialized, tc.chi)
 		})
 	}
@@ -493,7 +493,7 @@ func TestSerializeDeserializePsi(t *testing.T) {
 			serialized := SerializePsi(tc.psi)
 			deserialized, _, err := DeserializePsi(serialized, 0)
 
-			assert.ErrorIs(t, err, nil)
+			assert.NoError(t, err)
 			assert.Equal(t, deserialized, tc.psi)
 		})
 	}
@@ -550,7 +550,7 @@ func TestSerializeDeserializePi(t *testing.T) {
 			serialized := SerializePi(tc.pi)
 			deserialized, _, err := DeserializePi(serialized, 0)
 
-			assert.ErrorIs(t, err, nil)
+			assert.NoError(t, err)
 			assert.Equal(t, deserialized, tc.pi)
 		})
 	}
@@ -584,7 +584,7 @@ func TestSerializeDeserializeHashSequence(t *testing.T) {
 			serialized := SerializeHashSequence(tc.hashes)
 			deserialized, offset, err := DeserializeHashSequence(serialized, 0)
 
-			assert.ErrorIs(t, err, nil)
+			assert.NoError(t, err)
 			assert.Equal(t, offset, len(serialized))
 			assert.Equal(t, tc.hashes, deserialized)
 		})
@@ -621,7 +621,7 @@ func TestSerializeDeserializeHashSequenceSequence(t *testing.T) {
 			serialized := SerializeHashSequenceSequence(tc.hashSeq)
 			deserialized, offset, err := DeserializeHashSequenceSequence(serialized, 0)
 
-			assert.ErrorIs(t, err, nil)
+			assert.NoError(t, err)
 			assert.Equal(t, offset, len(serialized))
 			assert.Equal(t, tc.hashSeq, deserialized)
 		})
@@ -732,7 +732,7 @@ func TestSerializeDeserializeWorkReport(t *testing.T) {
 	serialized := report.Serialize()
 	deserialized, _, err := DeserializeWorkReport(serialized, 0)
 
-	assert.ErrorIs(t, err, nil)
+	assert.NoError(t, err)
 	assert.Equal(t, deserialized, report)
 }
 

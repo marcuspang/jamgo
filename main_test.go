@@ -3,11 +3,11 @@ package main
 import (
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"os"
 	"path/filepath"
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // TestCase represents the structure of our JSON test cases
@@ -135,61 +135,13 @@ func TestSafroleTransitions(t *testing.T) {
 
 			// Run the Safrole transition
 			output, err := ProcessSafroleTransition(input, testCase.PreState)
-			if err != nil {
-				t.Fatalf("ProcessSafroleTransition failed: %v", err)
-			}
 
-			// Compare the output with the expected output
-			if !compareOutputs(output, testCase.Output.Ok) {
-				t.Errorf("Output mismatch in file %s", file)
-			}
+			assert.NoError(t, err)
+			assert.Equal(t, output, testCase.Output.Ok)
+			assert.Equal(t, *output.State, testCase.PostState)
 
-			// Compare the post-state with the expected post-state
-			if ok, err := compareSafroleStates(*output.State, testCase.PostState); !ok {
-				t.Errorf("Post-state mismatch in file %s: %v", file, err)
-			}
 		})
 	}
-}
-
-func compareOutputs(actual SafroleOutput, expected struct {
-	EpochMark   interface{} `json:"epoch_mark"`
-	TicketsMark interface{} `json:"tickets_mark"`
-}) bool {
-	// Implement comparison logic
-	return actual.Ok.EpochMark == expected.EpochMark &&
-		actual.Ok.TicketsMark == expected.TicketsMark
-}
-
-func compareSafroleStates(actual, expected SafroleState) (bool, error) {
-	if actual.Timeslot != expected.Timeslot {
-		return false, errors.New("Timeslot mismatch")
-	}
-	if actual.Entropy != expected.Entropy {
-		return false, errors.New("Entropy mismatch")
-	}
-	if !reflect.DeepEqual(actual.PrevValidators, expected.PrevValidators) {
-		return false, errors.New("PrevValidators mismatch")
-	}
-	if !reflect.DeepEqual(actual.CurrValidators, expected.CurrValidators) {
-		return false, errors.New("CurrValidators mismatch")
-	}
-	if !reflect.DeepEqual(actual.NextValidators, expected.NextValidators) {
-		return false, errors.New("NextValidators mismatch")
-	}
-	if !reflect.DeepEqual(actual.DesignedValidators, expected.DesignedValidators) {
-		return false, errors.New("DesignedValidators mismatch")
-	}
-	if !reflect.DeepEqual(actual.TicketsAccumulator, expected.TicketsAccumulator) {
-		return false, errors.New("TicketsAccumulator mismatch")
-	}
-	if !reflect.DeepEqual(actual.TicketsOrKeys, expected.TicketsOrKeys) {
-		return false, errors.New("TicketsOrKeys mismatch")
-	}
-	if actual.TicketsVerifierKey != expected.TicketsVerifierKey {
-		return false, errors.New("TicketsVerifierKey mismatch")
-	}
-	return true, nil
 }
 
 func hexToBytes(s string) []byte {

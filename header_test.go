@@ -1,10 +1,10 @@
 package main
 
 import (
-	"bytes"
-	"reflect"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestValidateHeader(t *testing.T) {
@@ -53,55 +53,8 @@ func TestValidateHeader(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := ValidateHeader(tt.header, currentTime, parentHeader, config)
-			if result != tt.expected {
-				t.Errorf("ValidateHeader() = %v, want %v", result, tt.expected)
-			}
+
+			assert.Equal(t, tt.expected, result)
 		})
 	}
-}
-
-func headerEqual(h1, h2 *Header) bool {
-	return bytes.Equal(h1.ParentHash[:], h2.ParentHash[:]) &&
-		bytes.Equal(h1.StateRoot[:], h2.StateRoot[:]) &&
-		bytes.Equal(h1.ExtrinsicHash[:], h2.ExtrinsicHash[:]) &&
-		h1.TimeSlot == h2.TimeSlot &&
-		reflect.DeepEqual(h1.EpochMarker, h2.EpochMarker) &&
-		reflect.DeepEqual(h1.WinningTickets, h2.WinningTickets) &&
-		reflect.DeepEqual(h1.JudgementsMarker, h2.JudgementsMarker) &&
-		h1.AuthorKey == h2.AuthorKey &&
-		bytes.Equal(h1.VRFSignature.Signature[:], h2.VRFSignature.Signature[:]) &&
-		bytes.Equal(h1.Seal.Signature[:], h2.Seal.Signature[:])
-}
-
-func epochMarkerEqual(e1, e2 *EpochMarker) bool {
-	if (e1 == nil) != (e2 == nil) {
-		return false
-	}
-	if e1 == nil {
-		return true
-	}
-	return bytes.Equal(e1.EpochRandomness[:], e2.EpochRandomness[:]) &&
-		len(e1.ValidatorKeys) == len(e2.ValidatorKeys)
-}
-
-func winningTicketsEqual(w1, w2 *WinningTickets) bool {
-	if (w1 == nil) != (w2 == nil) {
-		return false
-	}
-	if w1 == nil {
-		return true
-	}
-	return len(w1.Tickets) == len(w2.Tickets)
-}
-
-func judgementsMarkerEqual(j1, j2 []Hash) bool {
-	if len(j1) != len(j2) {
-		return false
-	}
-	for i := range j1 {
-		if !bytes.Equal(j1[i][:], j2[i][:]) {
-			return false
-		}
-	}
-	return true
 }
