@@ -3,47 +3,8 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
-	"encoding/binary"
 	"fmt"
 )
-
-type Hash [32]byte
-
-// Header
-
-type Header struct {
-	ParentHash       Hash
-	StateRoot        Hash
-	ExtrinsicHash    Hash
-	TimeSlot         uint32
-	EpochMarker      *EpochMarker
-	WinningTickets   *WinningTickets
-	JudgementsMarker []Hash
-	AuthorKey        uint32
-	VRFSignature     BandersnatchSignature
-	Seal             BandersnatchSignature
-}
-
-func ValidateHeader(h *Header, currentTime uint64) bool {
-	if h.TimeSlot > uint32(currentTime) {
-		return false
-	}
-	// TODO: Add more validation logic here
-	return true
-}
-
-func SerializeHeader(h *Header, includeSeal bool) []byte {
-	var serialized []byte
-	serialized = append(serialized, h.ParentHash[:]...)
-	serialized = append(serialized, h.StateRoot[:]...)
-	serialized = append(serialized, h.ExtrinsicHash[:]...)
-	serialized = binary.BigEndian.AppendUint32(serialized, h.TimeSlot)
-	// Serialize other fields...
-	if includeSeal {
-		serialized = append(serialized, h.Seal.Signature[:]...)
-	}
-	return serialized
-}
 
 // Safrole, Block production, Chain Growth
 
@@ -164,7 +125,7 @@ func ValidateBlockSeal(header *Header, state *SafroleState) bool {
 	// Verify the seal using the appropriate sealing key
 	sealKeys := GenerateSealKeySequence(state, header.TimeSlot/600) // Assuming 600 slots per epoch
 	sealKey := sealKeys[header.TimeSlot%600]
-	return VerifyBandersnatchSignature(sealKey, SerializeHeader(header, false), header.Seal)
+	return VerifyBandersnatchSignature(sealKey, header.Serialize(false), header.Seal)
 }
 
 // Authorization system
@@ -585,9 +546,12 @@ type WinningTickets struct {
 type ValidatorKey struct {
 	BandersnatchKey BandersnatchKey // 32 bytes
 	Ed25519Key      Hash            // 32 bytes
-	BLSKey          []byte          // 144 bytes
-	Metadata        []byte          // 128 bytes
+	BLSKey          BLSKey          // 144 bytes
+	Metadata        Metadata        // 128 bytes
 }
+
+type BLSKey [144]byte
+type Metadata [128]byte
 
 // BandersnatchKey is a public key on the Bandersnatch curve
 type BandersnatchKey [32]byte
@@ -805,7 +769,7 @@ func UpdateStateFromHeader(header Header, state State) (State, error) {
 		StateRoot        Hash
 		WorkReportHashes []Hash
 	}{
-		HeaderHash: sha256.Sum256(SerializeHeader(&header, true)),
+		HeaderHash: sha256.Sum256(header.Serialize(true)),
 		StateRoot:  header.StateRoot,
 		// Accumulation root and work report hashes would be calculated elsewhere
 	}
@@ -851,7 +815,7 @@ func UpdateStateFromHeader(header Header, state State) (State, error) {
 // Helper functions
 func VerifyGuarantee(guarantee Guarantee, state State) bool {
 	// Serialize the WorkReport and CoreIndex
-	message := SerializeGuarantee(guarantee)
+	message := guarantee.Serialize()
 
 	validSignatures := 0
 	for _, attestation := range guarantee.Attestations {
@@ -870,12 +834,6 @@ func VerifyGuarantee(guarantee Guarantee, state State) bool {
 		}
 	}
 	return validSignatures >= 2 // At least 2 out of 3 signatures must be valid
-}
-
-// SerializeGuarantee serializes a Guarantee for signature verification
-func SerializeGuarantee(guarantee Guarantee) []byte {
-	// TODO
-	return []byte{}
 }
 
 // Bandersnatch operations
@@ -955,7 +913,7 @@ func CreateNextBlock(previousBlock Block, state State) Block {
 	// Create the next block based on the previous block and current state
 	return Block{
 		Header: Header{
-			ParentHash: sha256.Sum256(SerializeHeader(&previousBlock.Header, true)),
+			ParentHash: sha256.Sum256(previousBlock.Header.Serialize(true)),
 			TimeSlot:   previousBlock.Header.TimeSlot + 1,
 			// Set other fields of the Header struct
 		},
