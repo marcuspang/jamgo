@@ -225,8 +225,8 @@ func TestSerializeDeserializeDelta(t *testing.T) {
 					Balance:            1000,
 					AccumulateGasLimit: 500,
 					OnTransferGasLimit: 250,
-					Storage:            map[Hash][]byte{Hash{4, 5, 6}: {7, 8, 9}},
-					PreimageLookup:     map[Hash][]byte{Hash{10, 11, 12}: {13, 14, 15}},
+					Storage:            map[Hash][]byte{{4, 5, 6}: {7, 8, 9}},
+					PreimageLookup:     map[Hash][]byte{{10, 11, 12}: {13, 14, 15}},
 					PreimageMeta: map[struct {
 						Hash
 						Length uint32
@@ -254,7 +254,7 @@ func TestSerializeDeserializeDelta(t *testing.T) {
 			deserialized, _, err := DeserializeDelta(serialized, 0)
 
 			assert.NoError(t, err)
-			assert.Equal(t, deserialized, tc.delta)
+			assert.Equal(t, tc.delta, deserialized)
 		})
 	}
 }
@@ -285,7 +285,7 @@ func TestSerializeDeserializeEta(t *testing.T) {
 			deserialized, _, err := DeserializeEta(serialized, 0)
 
 			assert.NoError(t, err)
-			assert.Equal(t, deserialized, tc.eta)
+			assert.Equal(t, tc.eta, deserialized)
 		})
 	}
 }
@@ -342,7 +342,7 @@ func TestSerializeDeserializeRho(t *testing.T) {
 			deserialized, _, err := DeserializeRho(serialized, 0)
 
 			assert.NoError(t, err)
-			assert.Equal(t, deserialized, tc.rho)
+			assert.Equal(t, tc.rho, deserialized)
 		})
 	}
 }
@@ -410,7 +410,7 @@ func TestSerializeDeserializePhi(t *testing.T) {
 			deserialized, _, err := DeserializePhi(serialized, 0)
 
 			assert.NoError(t, err)
-			assert.Equal(t, deserialized, tc.phi)
+			assert.Equal(t, tc.phi, deserialized)
 		})
 	}
 }
@@ -448,7 +448,7 @@ func TestSerializeDeserializeChi(t *testing.T) {
 			deserialized, _, err := DeserializeChi(serialized, 0)
 
 			assert.NoError(t, err)
-			assert.Equal(t, deserialized, tc.chi)
+			assert.Equal(t, tc.chi, deserialized)
 		})
 	}
 }
@@ -494,7 +494,7 @@ func TestSerializeDeserializePsi(t *testing.T) {
 			deserialized, _, err := DeserializePsi(serialized, 0)
 
 			assert.NoError(t, err)
-			assert.Equal(t, deserialized, tc.psi)
+			assert.Equal(t, tc.psi, deserialized)
 		})
 	}
 }
@@ -551,7 +551,7 @@ func TestSerializeDeserializePi(t *testing.T) {
 			deserialized, _, err := DeserializePi(serialized, 0)
 
 			assert.NoError(t, err)
-			assert.Equal(t, deserialized, tc.pi)
+			assert.Equal(t, tc.pi, deserialized)
 		})
 	}
 }
@@ -733,7 +733,7 @@ func TestSerializeDeserializeWorkReport(t *testing.T) {
 	deserialized, _, err := DeserializeWorkReport(serialized, 0)
 
 	assert.NoError(t, err)
-	assert.Equal(t, deserialized, report)
+	assert.Equal(t, report, deserialized)
 }
 
 func createSampleState() *State {

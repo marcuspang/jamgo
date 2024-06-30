@@ -926,6 +926,32 @@ func (b *Block) Serialize() []byte {
 	return buf
 }
 
+func DeserializeBlock(data []byte, offset int) (*Block, int, error) {
+	if len(data) < 4 {
+		return nil, offset, errors.New("insufficient data for block deserialization")
+	}
+
+	headerSize := binary.BigEndian.Uint32(data[offset : offset+4])
+	if uint32(len(data)) < 4+headerSize {
+		return nil, offset, errors.New("insufficient data for header deserialization")
+	}
+
+	header, offset, err := DeserializeHeader(data, offset)
+	if err != nil {
+		return nil, offset, err
+	}
+
+	extrinsics, offset, err := DeserializeExtrinsics(data, offset)
+	if err != nil {
+		return nil, offset, err
+	}
+
+	return &Block{
+		Header:     *header,
+		Extrinsics: *extrinsics,
+	}, offset, nil
+}
+
 func (wt *WinningTickets) Serialize() []byte {
 	return SerializeTickets(wt.Tickets)
 }
@@ -1098,14 +1124,12 @@ func DeserializeWorkResult(data []byte, offset int) (WorkResult, int, error) {
 	result.GasRatio = int64(binary.BigEndian.Uint64(data[offset : offset+8]))
 	offset += 8
 
-	outputSize, offset, err := DeserializeCompactInteger(data, offset)
+	workOutput, offset, err := DeserializeWorkOutput(data, offset)
 	if err != nil {
 		return WorkResult{}, offset, err
 	}
-
-	result.Output = make([]byte, outputSize)
-	copy(result.Output, data[offset:offset+int(outputSize)])
-	offset += int(outputSize)
+	result.Output = make([]byte, len(workOutput))
+	copy(result.Output, workOutput)
 
 	return result, offset, nil
 }
@@ -1113,8 +1137,7 @@ func DeserializeWorkResult(data []byte, offset int) (WorkResult, int, error) {
 func SerializeWorkOutput(wo interface{}) []byte {
 	switch v := wo.(type) {
 	case []byte:
-		// TODO: return append([]byte{0}, SerializeVarOctetSequence(v)...)
-		return SerializeVarOctetSequence(v)
+		return append([]byte{0}, SerializeVarOctetSequence(v)...)
 	case uint32: // Assuming errors are represented as uint32
 		buf := make([]byte, 5)
 		buf[0] = byte(v)
@@ -1122,6 +1145,29 @@ func SerializeWorkOutput(wo interface{}) []byte {
 		return buf
 	default:
 		panic("Unknown work output type")
+	}
+}
+
+func DeserializeWorkOutput(data []byte, offset int) ([]byte, int, error) {
+	if len(data) < 1+offset {
+		return nil, offset, errors.New("insufficient data for work output")
+	}
+
+	// Output type is the first byte
+	outputType := data[offset]
+	offset++
+
+	switch outputType {
+	case 0: // Successful output
+		output, offset, err := DeserializeVarOctetSequence(data, offset)
+		if err != nil {
+			return nil, offset, err
+		}
+		return output, offset, nil
+	case 1, 2, 3, 4: // Error outputs
+		return data[offset : offset+4], offset + 4, nil
+	default:
+		return nil, offset, errors.New("invalid work output type")
 	}
 }
 
@@ -1288,32 +1334,6 @@ func CalculateExtrinsicHash(extrinsics *Extrinsics) Hash {
 
 	// Use Blake2b-256 for extrinsic hashing
 	return blake2b.Sum256(serializedExtrinsics)
-}
-
-func DeserializeBlock(data []byte, offset int) (*Block, int, error) {
-	if len(data) < 4 {
-		return nil, offset, errors.New("insufficient data for block deserialization")
-	}
-
-	headerSize := binary.BigEndian.Uint32(data[offset : offset+4])
-	if uint32(len(data)) < 4+headerSize {
-		return nil, offset, errors.New("insufficient data for header deserialization")
-	}
-
-	header, newOffset, err := DeserializeHeader(data[offset+4:offset+4+int(headerSize)], offset)
-	if err != nil {
-		return nil, offset, err
-	}
-
-	extrinsics, err := DeserializeExtrinsics(data[offset+4+int(headerSize):])
-	if err != nil {
-		return nil, offset, err
-	}
-
-	return &Block{
-		Header:     *header,
-		Extrinsics: *extrinsics,
-	}, newOffset, nil
 }
 
 func SerializeTickets(tickets []Ticket) []byte {
@@ -1747,37 +1767,36 @@ func (e *Extrinsics) Serialize() []byte {
 	return buf
 }
 
-func DeserializeExtrinsics(data []byte) (*Extrinsics, error) {
-	offset := 0
+func DeserializeExtrinsics(data []byte, offset int) (*Extrinsics, int, error) {
 	e := &Extrinsics{}
 	var err error
 
 	e.Tickets, offset, err = DeserializeTickets(data, offset)
 	if err != nil {
-		return nil, err
+		return nil, offset, err
 	}
 
 	e.Judgements, offset, err = DeserializeJudgements(data, offset)
 	if err != nil {
-		return nil, err
+		return nil, offset, err
 	}
 
 	e.Preimages, offset, err = DeserializePreimages(data, offset)
 	if err != nil {
-		return nil, err
+		return nil, offset, err
 	}
 
 	e.Assurances, offset, err = DeserializeAssurances(data, offset)
 	if err != nil {
-		return nil, err
+		return nil, offset, err
 	}
 
 	e.Guarantees, offset, err = DeserializeGuarantees(data, offset)
 	if err != nil {
-		return nil, err
+		return nil, offset, err
 	}
 
-	return e, nil
+	return e, offset, nil
 }
 
 func DeserializeVote(data []byte, offset int) (struct {
